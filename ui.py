@@ -6,7 +6,7 @@ st.set_page_config(page_title="Custom AI Bot", layout="centered")
 st.title("🧠 Build Your Custom AI Bot")
 
 # Optional: use environment variable for backend
-API_URL = os.getenv("API_URL", "https://propertyagent.onrender.com/chat")
+API_URL = os.getenv("API_URL", "https://propertyagent.onrender.com/")
 
 # Config inputs
 st.subheader("🔧 MongoDB Connection")
