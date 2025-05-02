@@ -1,7 +1,12 @@
 import streamlit as st
 import requests
+import os
 
+st.set_page_config(page_title="Custom AI Bot", layout="centered")
 st.title("🧠 Build Your Custom AI Bot")
+
+# Optional: use environment variable for backend
+API_URL = os.getenv("API_URL", "https://propertyagent.onrender.com/chat")
 
 # Config inputs
 st.subheader("🔧 MongoDB Connection")
@@ -18,13 +23,25 @@ st.subheader("💬 Ask your data")
 query = st.text_input("Your question")
 
 if st.button("Ask"):
-    # Upload file to backend
-    files = {"file": uploaded_file} if uploaded_file else None
-    payload = {
-        "message": query,
-        "mongo_uri": mongo_uri,
-        "mongo_db": mongo_db,
-        "mongo_collections": mongo_collections
-    }
-    response = requests.post("https://propertyagent.onrender.com/chat", data=payload, files=files)
-    st.write("🤖", response.json()["response"])
+    if not query:
+        st.warning("❗ Please enter a question.")
+    elif not mongo_uri and not uploaded_file:
+        st.warning("❗ Please provide at least a Mongo URI or upload a document.")
+    else:
+        with st.spinner("🤖 Thinking..."):
+            files = {"file": uploaded_file} if uploaded_file else None
+            payload = {
+                "message": query,
+                "mongo_uri": mongo_uri,
+                "mongo_db": mongo_db,
+                "mongo_collections": mongo_collections
+            }
+
+            try:
+                response = requests.post(API_URL, data=payload, files=files)
+                response.raise_for_status()
+                answer = response.json()["response"]
+                st.success("✅ Answer:")
+                st.write(answer)
+            except Exception as e:
+                st.error(f"❌ API Error: {e}")
