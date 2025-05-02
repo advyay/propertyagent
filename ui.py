@@ -44,6 +44,7 @@ if st.button("Ask"):
             }
 
             try:
+                st.caption(f"🔗 Requesting: {API_URL}")
                 response = requests.post(API_URL, data=payload, files=files)
                 response.raise_for_status()
                 answer = response.json().get("response", "⚠️ No response returned.")
