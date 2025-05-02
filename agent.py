@@ -1,12 +1,12 @@
-from llama_index.core import VectorStoreIndex, Settings, Document
+from llama_index.core import VectorStoreIndex, Settings, Document, StorageContext, load_index_from_storage
 from llama_index.llms.openai import OpenAI
 from pymongo import MongoClient
 from typing import Optional
 import os
+import hashlib
 from dotenv import load_dotenv
 
 load_dotenv()
-
 
 def query_agent(
     user_input: str,
@@ -33,7 +33,7 @@ def query_agent(
         db = client[mongo_db]
 
         for collection_name in collections:
-            cursor = db[collection_name].find({}, limit=100)
+            cursor = db[collection_name].find({}, limit=25)  # Reduce load
             for record in cursor:
                 text_chunks = [f"{k}: {v}" for k, v in record.items() if k != "_id"]
                 full_text = " | ".join(text_chunks)
@@ -44,17 +44,35 @@ def query_agent(
     except Exception as e:
         print(f"❌ Error loading MongoDB data: {e}")
 
-    # --- Final Check ---
     if not documents:
         return "No documents found from uploaded file or MongoDB."
 
-    # --- LLM Setup ---
+    # --- Setup OpenAI LLM ---
     llm = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), model="gpt-3.5-turbo")
     Settings.llm = llm
 
-    # --- Indexing and Query ---
-    index = VectorStoreIndex.from_documents(documents)
-    query_engine = index.as_query_engine()
-    response = query_engine.query(user_input)
+    # --- Setup Persistent Indexing ---
+    source_id = hashlib.md5((mongo_uri + mongo_db + mongo_collections).encode()).hexdigest()
+    index_dir = f"./storage/index_{source_id}"
 
+    if os.path.exists(index_dir):
+        print("✅ Loading cached index...")
+        storage_context = StorageContext.from_defaults(persist_dir=index_dir)
+        index = load_index_from_storage(storage_context)
+    else:
+        print("📦 Building index for new session...")
+        index = VectorStoreIndex.from_documents(documents)
+        index.storage_context.persist(persist_dir=index_dir)
+
+    # --- Smart Query Handling ---
+    query_engine = index.as_query_engine(
+        system_prompt="""
+You are a data analyst AI agent.
+
+- When asked about 'best performing agents', 'top revenue', or 'highest attendance', you should compare values and provide a ranked answer if possible.
+- If data is ambiguous or inconsistent, clearly explain that.
+- Use numeric aggregation when total commissions, counts, or metrics are involved.
+"""
+    )
+    response = query_engine.query(user_input)
     return str(response)
