@@ -8,6 +8,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def compute_mongo_fingerprint(client, db_name, collections):
+    import json
+    fingerprint_data = []
+
+    for col_name in collections:
+        records = list(client[db_name][col_name].find({}, {'_id': 0}))
+        fingerprint_data.append({col_name: records})
+
+    json_str = json.dumps(fingerprint_data, sort_keys=True)
+    return hashlib.md5(json_str.encode()).hexdigest()
+
+
 def query_agent(
     user_input: str,
     mongo_uri: str,
@@ -33,7 +45,7 @@ def query_agent(
         db = client[mongo_db]
 
         for collection_name in collections:
-            cursor = db[collection_name].find({}, limit=25)  # Reduce load
+            cursor = db[collection_name].find({})  # Reduce load
             for record in cursor:
                 text_chunks = [f"{k}: {v}" for k, v in record.items() if k != "_id"]
                 full_text = " | ".join(text_chunks)
@@ -52,8 +64,10 @@ def query_agent(
     Settings.llm = llm
 
     # --- Setup Persistent Indexing ---
-    source_id = hashlib.md5((mongo_uri + mongo_db + mongo_collections).encode()).hexdigest()
-    index_dir = f"./storage/index_{source_id}"
+    client = MongoClient(mongo_uri)
+    fingerprint = compute_mongo_fingerprint(client, mongo_db, collections)
+    index_dir = f"./storage/index_{fingerprint}"
+
 
     if os.path.exists(index_dir):
         print("✅ Loading cached index...")
