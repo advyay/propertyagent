@@ -10,9 +10,9 @@ API_URL = os.getenv("API_URL", "https://propertyagent.onrender.com/chat")
 
 # Config inputs
 st.subheader("🔧 MongoDB Connection")
-mongo_uri = st.text_input("Mongo URI")
-mongo_db = st.text_input("Mongo DB Name")
-mongo_collections = st.text_input("Collections (comma-separated)")
+mongo_uri = st.text_input("Mongo URI", placeholder="mongodb+srv://technology:JeFoqENdHsuaZm5e@swavish.kiq5tyy.mongodb.net/")
+mongo_db = st.text_input("Mongo DB Name", placeholder="axproperty")
+mongo_collections = st.text_input("Collections (comma-separated)", placeholder="bookings,leads,projects,teams,users")
 
 # File upload
 st.subheader("📁 Upload a document")
