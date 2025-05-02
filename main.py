@@ -32,11 +32,15 @@ async def chat_endpoint(
     mongo_collections: str = Form(...),
     file: UploadFile = None,
 ):
-    response = query_agent(
-        user_input=message,
-        mongo_uri=mongo_uri,
-        mongo_db=mongo_db,
-        mongo_collections=mongo_collections,
-        uploaded_file=file
-    )
-    return {"response": response}
+    try:
+        response = query_agent(
+            user_input=message,
+            mongo_uri=mongo_uri,
+            mongo_db=mongo_db,
+            mongo_collections=mongo_collections,
+            uploaded_file=file,
+        )
+        return {"response": response}
+    except Exception as e:
+        return {"response": f"❌ Internal Server Error: {str(e)}"}
+
