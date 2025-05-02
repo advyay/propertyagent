@@ -8,16 +8,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from bson import json_util
+
 def compute_mongo_fingerprint(client, db_name, collections):
-    import json
+
     fingerprint_data = []
 
     for col_name in collections:
-        records = list(client[db_name][col_name].find({}, {'_id': 0}))
+        records = list(client[db_name][col_name].find({}, {'_id': 0}))  # Exclude _id
         fingerprint_data.append({col_name: records})
 
-    json_str = json.dumps(fingerprint_data, sort_keys=True)
+    json_str = json_util.dumps(fingerprint_data, sort_keys=True)
     return hashlib.md5(json_str.encode()).hexdigest()
+
 
 
 def query_agent(
