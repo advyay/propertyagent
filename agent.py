@@ -45,7 +45,7 @@ def query_agent(
         db = client[mongo_db]
 
         for collection_name in collections:
-            cursor = db[collection_name].find({})  # Reduce load
+            cursor = db[collection_name].find({}, limit=100)  # Reduce load
             for record in cursor:
                 text_chunks = [f"{k}: {v}" for k, v in record.items() if k != "_id"]
                 full_text = " | ".join(text_chunks)
