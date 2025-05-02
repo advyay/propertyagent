@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+llama-index
+llama-index-readers-file
+llama-index-readers-database
+openai
+pymongo
+python-dotenv
