@@ -26,5 +26,5 @@ if st.button("Ask"):
         "mongo_db": mongo_db,
         "mongo_collections": mongo_collections
     }
-    response = requests.post("http://localhost:8000/chat", data=payload, files=files)
+    response = requests.post("https://propertyagent.onrender.com/chat", data=payload, files=files)
     st.write("🤖", response.json()["response"])
