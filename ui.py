@@ -7,7 +7,7 @@ st.set_page_config(page_title="Custom AI Bot", layout="centered")
 st.title("🧠 Build Your Custom AI Bot")
 
 # Backend endpoint
-API_URL = os.getenv("API_URL", "https://propertyagent.onrender.com/chat")
+API_URL = "https://propertyagent.onrender.com/chat"
 
 # Setup session state for history
 if "history" not in st.session_state:
